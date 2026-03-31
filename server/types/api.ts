@@ -5,6 +5,7 @@ export interface ChatRequestBody {
 
 export interface ChatResponse {
     answer: string;
+    sessionId: string;
 }
 
 export interface IngestResponse {

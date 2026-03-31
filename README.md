@@ -23,6 +23,7 @@ This repository has been migrated to TypeScript for both frontend and backend.
 - Ask questions through an agentic chat API
 - Tool-based retrieval from uploaded knowledge
 - Session-aware chat through sessionId
+- Browser-persisted chat sessions with New Chat reset
 - Strict TypeScript checks across client and server
 
 ### File ingestion flow
@@ -120,11 +121,17 @@ Request body:
 }
 ```
 
+Notes:
+
+- If sessionId is omitted or empty, the server generates one.
+- The client stores sessionId locally and reuses it across requests until New Chat is clicked.
+
 Success response:
 
 ```json
 {
-  "answer": "..."
+  "answer": "...",
+  "sessionId": "resolved-session-id"
 }
 ```
 
