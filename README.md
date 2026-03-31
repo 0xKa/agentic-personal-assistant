@@ -1,187 +1,264 @@
 # Agentic Personal Assistant
 
-A full-stack agentic RAG (Retrieval-Augmented Generation) application that allows users to upload PDF documents and chat with them using an intelligent AI agent.
+A full-stack Retrieval-Augmented Generation (RAG) assistant where you can upload PDF files, ingest them into Pinecone, and chat with an agent that can search your uploaded knowledge base.
 
-## 🚀 Features
+This repository has been migrated to TypeScript for both frontend and backend.
 
-- **PDF Document Ingestion**: Upload and process PDF files into a vector database
-- **Agentic Chat**: Intelligent agent that decides when to search the knowledge base
-- **Conversation Memory**: Maintains context across multiple questions
-- **Modern UI**: ChatGPT-like interface with file upload capabilities
-- **Observability**: Integrated with LangSmith for monitoring and tracing
+## Overview
 
-## 🏗️ Architecture
+- Frontend: React 19 + Vite + TypeScript
+- Backend: Express + TypeScript (Node ESM, tsx in dev)
+- Agent: LangChain createAgent with tool calling
+- Vector DB: Pinecone
+- Embeddings: llama-text-embed-v2 via Pinecone embeddings
+- LLM: OpenAI gpt-4o
+- Optional tracing: LangSmith
 
-### Backend (Node.js/Express)
-- **Server**: Express.js API server with CORS and file upload support
-- **Agent**: LangChain ReAct agent with OpenAI GPT-4o
-- **Vector Database**: Pinecone for document storage and similarity search
-- **Embeddings**: Pinecone-hosted `llama-text-embed-v2` model
-- **Observability**: LangSmith for tracing and monitoring
+## Features
 
-### Frontend (React/Vite)
-- **UI Framework**: React with Vite for fast development
-- **Styling**: ChatGPT-inspired dark theme interface
-- **File Upload**: Drag-and-drop PDF upload with progress feedback
-- **Chat Interface**: Real-time messaging with typing indicators
+- Upload PDF documents for ingestion
+- Split and embed document chunks into Pinecone
+- Ask questions through an agentic chat API
+- Tool-based retrieval from uploaded knowledge
+- Session-aware chat through sessionId
+- Strict TypeScript checks across client and server
 
-## 📋 Prerequisites
+## Project Structure
 
-- Node.js (v18 or higher)
-- npm or yarn
-- Pinecone account with index created
+```text
+agentic-personal-assistant/
+|-- package.json
+|-- tsconfig.base.json
+|-- README.md
+|-- project-overview.md
+|-- client/
+|   |-- package.json
+|   |-- tsconfig.json
+|   |-- index.html
+|   |-- vite.config.js
+|   |-- src/
+|   |   |-- App.tsx
+|   |   |-- main.tsx
+|   |   |-- App.css
+|   |   `-- index.css
+|   `-- ...
+`-- server/
+    |-- package.json
+    |-- tsconfig.json
+    |-- env.d.ts
+    |-- env.ts
+    |-- index.ts
+    |-- agent.ts
+    |-- tools.ts
+    |-- ingest.ts
+    |-- .env.example
+    `-- ...
+```
+
+## Prerequisites
+
+- Node.js 18+
+- npm
 - OpenAI API key
-- LangSmith account (optional, for observability)
+- Pinecone API key and an existing Pinecone index
+- LangSmith credentials (optional)
 
-## 🛠️ Setup
+## Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd agentic-personal-assistant
-   ```
+1. Install dependencies from the repository root.
 
-2. **Install dependencies**
-   ```bash
-   npm run install:all
-   ```
+```bash
+npm run install:all
+```
 
-3. **Environment Configuration**
-   ```bash
-   cp .env.example .env
-   ```
+1. Create a server environment file.
 
-   Edit `.env` with your API keys:
-   ```env
-   # LLM
-   OPENAI_API_KEY=your_openai_api_key
-   
-   # Vector DB (Pinecone)
-   PINECONE_API_KEY=your_pinecone_api_key
-   PINECONE_INDEX=your_pinecone_index_name
-   
-   # LangSmith tracing
-   LANGSMITH_TRACING=true
-   LANGSMITH_ENDPOINT=https://api.smith.langchain.com
-   LANGSMITH_API_KEY=langsmith_key
-   LANGSMITH_PROJECT="Project name"
-   ```
+PowerShell:
 
-## 🚀 Running the Application
+```powershell
+Copy-Item server/.env.example server/.env
+```
 
-### Development Mode
+Bash:
+
+```bash
+cp server/.env.example server/.env
+```
+
+1. Edit server/.env with your real keys.
+
+```env
+# LLM
+OPENAI_API_KEY=your_openai_api_key
+
+# Vector DB (Pinecone)
+PINECONE_API_KEY=your_pinecone_api_key
+PINECONE_INDEX=your_pinecone_index_name
+
+# Optional LangSmith tracing
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGSMITH_API_KEY=your_langsmith_key
+LANGSMITH_PROJECT="Agentic RAG"
+```
+
+## Running the App
+
+From the repository root:
+
 ```bash
 npm run dev
 ```
-This starts both the server (port 3001) and client (port 5173) concurrently.
 
-### Individual Services
+Default ports:
+
+- Client: <http://localhost:5173>
+- Server: <http://localhost:3001>
+
+Run only one side when needed:
+
 ```bash
-# Server only
-npm run dev:server
-
-# Client only  
 npm run dev:client
+npm run dev:server
 ```
 
-## 📁 Project Structure
+## Scripts
 
+Root (package.json):
+
+- npm run dev: run server and client concurrently
+- npm run dev:server: run server workspace dev command
+- npm run dev:client: run client workspace dev command
+- npm run typecheck: run server and client type checks
+- npm run lint: run lint fix + format in both workspaces
+- npm run install:all: install root/client/server dependencies
+
+Client (client/package.json):
+
+- npm --prefix client run dev
+- npm --prefix client run build
+- npm --prefix client run typecheck
+- npm --prefix client run lint
+
+Server (server/package.json):
+
+- npm --prefix server run dev
+- npm --prefix server run build
+- npm --prefix server run typecheck
+- npm --prefix server run start
+
+## API Endpoints
+
+### POST /api/chat
+
+Request body:
+
+```json
+{
+  "message": "What does the uploaded PDF say about X?",
+  "sessionId": "optional-session-id"
+}
 ```
-agentic-personal-assistant/
-├── server/                 # Backend API server
-│   ├── index.ts           # Express server and API routes
-│   ├── agent.ts           # Agent logic and memory management
-│   ├── tools.ts           # Knowledge base search tool
-│   ├── ingest.ts          # PDF ingestion pipeline
-│   └── package.json       # Server dependencies
-├── client/                # Frontend React app
-│   ├── src/
-│   │   ├── App.tsx        # Main application component
-│   │   ├── App.css        # ChatGPT-like styling
-│   │   └── main.tsx       # React entry point
-│   └── package.json       # Client dependencies
-├── .env.example           # Environment variables template
-├── package.json           # Root package with scripts
-└── README.md              # This file
+
+Success response:
+
+```json
+{
+  "answer": "..."
+}
 ```
 
-## 🔄 How It Works
+Error response:
 
-### Document Ingestion
-1. User uploads PDF via frontend
-2. Server receives file and extracts text using PDFLoader
-3. Text is split into chunks (1000 chars with 200 overlap)
-4. Chunks are converted to embeddings using Pinecone's model
-5. Embeddings are stored in Pinecone vector database
+```json
+{
+  "error": "..."
+}
+```
 
-### Chat Flow
-1. User sends a message
-2. Agent receives message with conversation history
-3. Agent decides whether to search the knowledge base
-4. If needed, searches Pinecone for relevant document chunks
-5. Agent uses retrieved context to generate response
-6. Response is sent back to user and added to conversation history
+### POST /api/ingest
 
-## 🔧 Key Components
+- Content type: multipart/form-data
+- File field name: file
+- Allowed file type: PDF
+- Upload limit: 25 MB
 
-### Agent (`server/agent.ts`)
-- ReAct agent using LangChain's `createAgent`
-- MemorySaver for conversation persistence
-- Tool calling for knowledge base search
+Success response:
 
-### Search Tool (`server/tools.ts`)
-- Pinecone vector store integration
-- Similarity search with top-k results
-- Lazy initialization for environment variables
+```json
+{
+  "ok": true
+}
+```
 
-### Ingestion Pipeline (`server/ingest.ts`)
-- PDF text extraction and chunking
-- Batch processing (96 chunks per API call)
-- Pinecone upsert operations
+## How It Works
 
-### Frontend (`client/src/App.tsx`)
-- React state management for chat and upload
-- File upload with progress feedback
-- Real-time chat interface with auto-scroll
+Ingestion flow:
 
-## 🐛 Troubleshooting
+1. Frontend uploads PDF to /api/ingest.
+2. Server loads PDF content.
+3. Text is chunked (size 1000, overlap 200).
+4. Chunks are embedded and written to Pinecone in batches.
 
-### Common Issues
+Chat flow:
 
-1. **Connection Refused Error**
-   - Ensure server is running on port 3001
-   - Check for port conflicts: `lsof -i :3001`
+1. Frontend sends message to /api/chat.
+2. Server runs LangChain agent.
+3. Agent can call search_knowledge_base tool.
+4. Tool performs similarity search in Pinecone.
+5. Agent returns final answer text.
 
-2. **Environment Variables Missing**
-   - Verify `.env` file exists in server directory
-   - Check all required API keys are set
+## TypeScript Notes
 
-3. **Pinecone API Errors**
-   - Verify Pinecone index exists
-   - Check API key permissions
-   - Ensure embedding model matches ingestion/retrieval
+- Shared base config: tsconfig.base.json
+- Client config: client/tsconfig.json (noEmit, bundler module resolution)
+- Server config: server/tsconfig.json (NodeNext, outDir dist)
+- Server dev runtime uses tsx
+- Server production start runs compiled output from dist/index.js
+- Environment access is validated by server/env.ts and typed by server/env.d.ts
 
-4. **Dependency Installation Errors**
-   - Use `--legacy-peer-deps` flag for peer dependency conflicts
-   - Clear node_modules and reinstall if needed
+## Troubleshooting
 
-## 📚 Technologies Used
+1. Dependency resolution fails during install.
 
-- **Backend**: Node.js, Express.js, Multer
-- **Frontend**: React, Vite
-- **AI/ML**: LangChain, OpenAI GPT-4o
-- **Vector DB**: Pinecone
-- **Observability**: LangSmith
-- **Development**: Concurrently, ESLint
+- Use npm run install:all from root.
+- If installing server manually, use:
 
-## 🤝 Contributing
+```bash
+npm --prefix server install --legacy-peer-deps
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+1. Missing environment variables.
 
-## 📄 License
+- Confirm server/.env exists.
+- Confirm OPENAI_API_KEY, PINECONE_API_KEY, and PINECONE_INDEX are set.
 
-This project is licensed under the MIT License.
+1. Port conflict on 3001 or 5173.
+
+- Windows:
+
+```powershell
+netstat -ano | findstr :3001
+netstat -ano | findstr :5173
+```
+
+- macOS/Linux:
+
+```bash
+lsof -i :3001
+lsof -i :5173
+```
+
+1. Empty or weak retrieval answers.
+
+- Ensure documents were ingested successfully.
+- Ensure ingestion and retrieval both use llama-text-embed-v2.
+
+## Notes
+
+- The frontend currently calls the backend using absolute localhost URLs (<http://localhost:3001>).
+- The Vite proxy is configured in client/vite.config.js but is not used by current fetch calls.
+
+## License
+
+No repository-level license file is currently included.
