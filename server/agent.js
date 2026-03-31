@@ -9,7 +9,7 @@ const checkpointer = new MemorySaver();
 export async function runAgent({ sessionId = "default", message }) {
   try {
     const model = new ChatOpenAI({
-      model: "gpt-4o",
+      model: "gpt-4.1-nano",
       temperature: 0,
     });
 
