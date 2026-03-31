@@ -25,37 +25,9 @@ This repository has been migrated to TypeScript for both frontend and backend.
 - Session-aware chat through sessionId
 - Strict TypeScript checks across client and server
 
-## Project Structure
+### File ingestion flow
 
-```text
-agentic-personal-assistant/
-|-- package.json
-|-- tsconfig.base.json
-|-- README.md
-|-- project-overview.md
-|-- client/
-|   |-- package.json
-|   |-- tsconfig.json
-|   |-- index.html
-|   |-- vite.config.js
-|   |-- src/
-|   |   |-- App.tsx
-|   |   |-- main.tsx
-|   |   |-- App.css
-|   |   `-- index.css
-|   `-- ...
-`-- server/
-    |-- package.json
-    |-- tsconfig.json
-    |-- env.d.ts
-    |-- env.ts
-    |-- index.ts
-    |-- agent.ts
-    |-- tools.ts
-    |-- ingest.ts
-    |-- .env.example
-    `-- ...
-```
+![File Ingestion Flow](./files/imgs/file-ingestion-flow.png)
 
 ## Prerequisites
 
@@ -69,40 +41,26 @@ agentic-personal-assistant/
 
 1. Install dependencies from the repository root.
 
-```bash
-npm run install:all
-```
+  ```bash
+  npm run install:all
+  ```
 
-1. Create a server environment file.
+2. create server/.env with your real keys.
 
-PowerShell:
+  ```env
+  # LLM
+  OPENAI_API_KEY=your_openai_api_key
 
-```powershell
-Copy-Item server/.env.example server/.env
-```
+  # Vector DB (Pinecone)
+  PINECONE_API_KEY=your_pinecone_api_key
+  PINECONE_INDEX=your_pinecone_index_name
 
-Bash:
-
-```bash
-cp server/.env.example server/.env
-```
-
-1. Edit server/.env with your real keys.
-
-```env
-# LLM
-OPENAI_API_KEY=your_openai_api_key
-
-# Vector DB (Pinecone)
-PINECONE_API_KEY=your_pinecone_api_key
-PINECONE_INDEX=your_pinecone_index_name
-
-# Optional LangSmith tracing
-LANGSMITH_TRACING=true
-LANGSMITH_ENDPOINT=https://api.smith.langchain.com
-LANGSMITH_API_KEY=your_langsmith_key
-LANGSMITH_PROJECT="Agentic RAG"
-```
+  # Optional LangSmith tracing
+  LANGSMITH_TRACING=true
+  LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+  LANGSMITH_API_KEY=your_langsmith_key
+  LANGSMITH_PROJECT="Agentic RAG"
+  ```
 
 ## Running the App
 
@@ -192,71 +150,3 @@ Success response:
   "ok": true
 }
 ```
-
-## How It Works
-
-Ingestion flow:
-
-1. Frontend uploads PDF to /api/ingest.
-2. Server loads PDF content.
-3. Text is chunked (size 1000, overlap 200).
-4. Chunks are embedded and written to Pinecone in batches.
-
-Chat flow:
-
-1. Frontend sends message to /api/chat.
-2. Server runs LangChain agent.
-3. Agent can call search_knowledge_base tool.
-4. Tool performs similarity search in Pinecone.
-5. Agent returns final answer text.
-
-## TypeScript Notes
-
-- Shared base config: tsconfig.base.json
-- Client config: client/tsconfig.json (noEmit, bundler module resolution)
-- Server config: server/tsconfig.json (NodeNext, outDir dist)
-- Server dev runtime uses tsx
-- Server production start runs compiled output from dist/index.js
-- Environment access is validated by server/env.ts and typed by server/env.d.ts
-
-## Troubleshooting
-
-1. Dependency resolution fails during install.
-
-- Use npm run install:all from root.
-- If installing server manually, use:
-
-```bash
-npm --prefix server install --legacy-peer-deps
-```
-
-1. Missing environment variables.
-
-- Confirm server/.env exists.
-- Confirm OPENAI_API_KEY, PINECONE_API_KEY, and PINECONE_INDEX are set.
-
-1. Port conflict on 3001 or 5173.
-
-- Windows:
-
-```powershell
-netstat -ano | findstr :3001
-netstat -ano | findstr :5173
-```
-
-- macOS/Linux:
-
-```bash
-lsof -i :3001
-lsof -i :5173
-```
-
-1. Empty or weak retrieval answers.
-
-- Ensure documents were ingested successfully.
-- Ensure ingestion and retrieval both use llama-text-embed-v2.
-
-## Notes
-
-- The frontend currently calls the backend using absolute localhost URLs (<http://localhost:3001>).
-- The Vite proxy is configured in client/vite.config.js but is not used by current fetch calls.
