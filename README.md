@@ -4,6 +4,8 @@ A full-stack Retrieval-Augmented Generation (RAG) assistant where you can upload
 
 This repository has been migrated to TypeScript for both frontend and backend.
 
+![Screenshot](./files/imgs/Screenshot%202026-03-31%20074035.png)
+
 ## Overview
 
 - Frontend: React 19 + Vite + TypeScript
@@ -258,7 +260,3 @@ lsof -i :5173
 
 - The frontend currently calls the backend using absolute localhost URLs (<http://localhost:3001>).
 - The Vite proxy is configured in client/vite.config.js but is not used by current fetch calls.
-
-## License
-
-No repository-level license file is currently included.
