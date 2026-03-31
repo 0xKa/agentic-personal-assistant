@@ -1,7 +1,7 @@
 import { MemorySaver } from "@langchain/langgraph-checkpoint";
 import { ChatOpenAI } from "@langchain/openai";
 import { createAgent } from "langchain";
-import { searchKnowledgeBase } from "./tools.js";
+import { searchKnowledgeBase } from "./tools.ts";
 
 interface RunAgentInput {
   sessionId?: string;

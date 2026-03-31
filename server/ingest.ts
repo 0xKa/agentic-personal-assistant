@@ -2,7 +2,7 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { PineconeEmbeddings, PineconeStore } from "@langchain/pinecone";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { requireEnv } from "./env.js";
+import { requireEnv } from "./env.ts";
 
 export const ingestData = async (filePath: string): Promise<void> => {
   const loader = new PDFLoader(filePath);
