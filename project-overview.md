@@ -16,7 +16,7 @@ At a high level:
 - Backend: Express API for chat and ingestion.
 - AI orchestration: LangChain agent with a retrieval tool.
 - Vector store: Pinecone with embeddings (`llama-text-embed-v2`).
-- LLM: OpenAI model (`gpt-4o`).
+- LLM: OpenAI model (`gpt-4.1-nano`).
 
 ## 2. Repository Structure
 
@@ -90,7 +90,7 @@ Routes:
 
 `runAgent` does the following:
 
-1. Creates a `ChatOpenAI` model (`gpt-4o`, `temperature: 0`).
+1. Creates a `ChatOpenAI` model (`gpt-4.1-nano`, `temperature: 0`).
 2. Creates a LangChain agent with:
    - the model,
    - tool list containing `searchKnowledgeBase`,
@@ -221,7 +221,7 @@ If Pinecone or OpenAI keys/index are missing, ingestion or retrieval will fail.
 
 - Backend: Node.js, Express, Multer
 - Frontend: React, Vite
-- LLM/Agent: LangChain + OpenAI (`gpt-4o`)
+- LLM/Agent: LangChain + OpenAI (`gpt-4.1-nano`)
 - Vector DB: Pinecone
 - Embeddings: Pinecone embeddings (`llama-text-embed-v2`)
 - Optional observability: LangSmith

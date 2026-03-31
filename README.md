@@ -11,7 +11,7 @@ This repository has been migrated to TypeScript for both frontend and backend.
 - Agent: LangChain createAgent with tool calling
 - Vector DB: Pinecone
 - Embeddings: llama-text-embed-v2 via Pinecone embeddings
-- LLM: OpenAI gpt-4o
+- LLM: OpenAI gpt-4.1-nano
 - Optional tracing: LangSmith
 
 ## Features

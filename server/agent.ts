@@ -49,7 +49,7 @@ export async function runAgent({
   message,
 }: RunAgentInput): Promise<RunAgentOutput> {
   const model = new ChatOpenAI({
-    model: "gpt-4o",
+    model: "gpt-4.1-nano",
     temperature: 0,
   });
 
