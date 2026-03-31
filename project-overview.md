@@ -27,16 +27,16 @@ At a high level:
   - `.gitignore`: root ignore rules.
 
 - `server/`
-  - `index.js`: Express app and API routes.
-  - `agent.js`: LangChain agent setup and invocation.
-  - `tools.js`: knowledge-base retrieval tool over Pinecone.
-  - `ingest.js`: PDF -> chunks -> embeddings -> Pinecone flow.
+  - `index.ts`: Express app and API routes.
+  - `agent.ts`: LangChain agent setup and invocation.
+  - `tools.ts`: knowledge-base retrieval tool over Pinecone.
+  - `ingest.ts`: PDF -> chunks -> embeddings -> Pinecone flow.
   - `package.json`: backend dependencies and scripts.
   - `.env.example`: required environment variables.
 
 - `client/`
-  - `src/main.jsx`: React entry point.
-  - `src/App.jsx`: UI logic for chat + upload.
+  - `src/main.tsx`: React entry point.
+  - `src/App.tsx`: UI logic for chat + upload.
   - `src/App.css`: chat/upload styling.
   - `src/index.css`: global styles.
   - `vite.config.js`: Vite setup (including API proxy config).
@@ -62,7 +62,7 @@ In root `package.json`:
 
 ## 4. Backend Walkthrough
 
-### 4.1 Express App (`server/index.js`)
+### 4.1 Express App (`server/index.ts`)
 
 Main setup:
 
@@ -86,7 +86,7 @@ Routes:
    - Calls `ingestData(filePath)` to process/store document chunks.
    - Deletes temporary file after processing (success or failure).
 
-### 4.2 Agent Orchestration (`server/agent.js`)
+### 4.2 Agent Orchestration (`server/agent.ts`)
 
 `runAgent` does the following:
 
@@ -100,7 +100,7 @@ Routes:
 4. Uses `thread_id: sessionId` so conversations can be tracked by session.
 5. Returns the final agent output text.
 
-### 4.3 Retrieval Tool (`server/tools.js`)
+### 4.3 Retrieval Tool (`server/tools.ts`)
 
 `searchKnowledgeBase` is a LangChain tool (`name: search_knowledge_base`) that:
 
@@ -112,7 +112,7 @@ Routes:
 4. Runs `similaritySearch(query, 10)`.
 5. Returns joined chunk text as context for the LLM.
 
-### 4.4 Ingestion Pipeline (`server/ingest.js`)
+### 4.4 Ingestion Pipeline (`server/ingest.ts`)
 
 `ingestData(filePath)` pipeline:
 
@@ -124,16 +124,16 @@ Routes:
 4. Uses `PineconeEmbeddings` with `llama-text-embed-v2`.
 5. Adds document chunks to vector store in batches of `96`.
 
-This embedding model must match retrieval-time embeddings in `tools.js` (and it does).
+This embedding model must match retrieval-time embeddings in `tools.ts` (and it does).
 
 ## 5. Frontend Walkthrough
 
-### 5.1 Entry Point (`client/src/main.jsx`)
+### 5.1 Entry Point (`client/src/main.tsx`)
 
 - Standard React bootstrap.
 - Renders `<App />` inside `<StrictMode>`.
 
-### 5.2 Main Component (`client/src/App.jsx`)
+### 5.2 Main Component (`client/src/App.tsx`)
 
 State managed in component:
 
@@ -213,7 +213,7 @@ If Pinecone or OpenAI keys/index are missing, ingestion or retrieval will fail.
 
 ## 8. Notable Observations
 
-1. `client/vite.config.js` has an `/api` proxy to `http://localhost:3001`, but `App.jsx` currently calls absolute backend URLs (`http://localhost:3001/...`).
+1. `client/vite.config.js` has an `/api` proxy to `http://localhost:3001`, but `App.tsx` currently calls absolute backend URLs (`http://localhost:3001/...`).
 2. The frontend does not send `sessionId` in chat calls right now, so backend defaults to `sessionId = "default"`.
 3. There is an extra nested package manifest at `client/client/package.json` that appears unrelated to runtime logic.
 

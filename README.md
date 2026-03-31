@@ -89,16 +89,16 @@ npm run dev:client
 ```
 agentic-personal-assistant/
 ├── server/                 # Backend API server
-│   ├── index.js           # Express server and API routes
-│   ├── agent.js           # Agent logic and memory management
-│   ├── tools.js           # Knowledge base search tool
-│   ├── ingest.js          # PDF ingestion pipeline
+│   ├── index.ts           # Express server and API routes
+│   ├── agent.ts           # Agent logic and memory management
+│   ├── tools.ts           # Knowledge base search tool
+│   ├── ingest.ts          # PDF ingestion pipeline
 │   └── package.json       # Server dependencies
 ├── client/                # Frontend React app
 │   ├── src/
-│   │   ├── App.jsx        # Main application component
+│   │   ├── App.tsx        # Main application component
 │   │   ├── App.css        # ChatGPT-like styling
-│   │   └── main.jsx       # React entry point
+│   │   └── main.tsx       # React entry point
 │   └── package.json       # Client dependencies
 ├── .env.example           # Environment variables template
 ├── package.json           # Root package with scripts
@@ -124,22 +124,22 @@ agentic-personal-assistant/
 
 ## 🔧 Key Components
 
-### Agent (`server/agent.js`)
+### Agent (`server/agent.ts`)
 - ReAct agent using LangChain's `createAgent`
 - MemorySaver for conversation persistence
 - Tool calling for knowledge base search
 
-### Search Tool (`server/tools.js`)
+### Search Tool (`server/tools.ts`)
 - Pinecone vector store integration
 - Similarity search with top-k results
 - Lazy initialization for environment variables
 
-### Ingestion Pipeline (`server/ingest.js`)
+### Ingestion Pipeline (`server/ingest.ts`)
 - PDF text extraction and chunking
 - Batch processing (96 chunks per API call)
 - Pinecone upsert operations
 
-### Frontend (`client/src/App.jsx`)
+### Frontend (`client/src/App.tsx`)
 - React state management for chat and upload
 - File upload with progress feedback
 - Real-time chat interface with auto-scroll
