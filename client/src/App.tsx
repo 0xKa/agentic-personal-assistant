@@ -7,8 +7,10 @@ import { ChatPanel } from "./components/ChatPanel";
 import { UploadPanel } from "./components/UploadPanel";
 import type { Message } from "./types/chat";
 import { getErrorMessage } from "./utils/errors";
+import { createSessionId, getOrCreateSessionId, persistSessionId } from "./utils/session";
 
 function App() {
+  const [sessionId, setSessionId] = useState<string>(() => getOrCreateSessionId());
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -31,8 +33,14 @@ function App() {
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
 
     try {
-      const answer = await chatWithAssistant(trimmed);
-      setMessages((prev) => [...prev, { role: "ai", text: answer }]);
+      const chatResult = await chatWithAssistant(trimmed, sessionId);
+
+      if (chatResult.sessionId !== sessionId) {
+        setSessionId(chatResult.sessionId);
+      }
+      persistSessionId(chatResult.sessionId);
+
+      setMessages((prev) => [...prev, { role: "ai", text: chatResult.answer }]);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -72,9 +80,20 @@ function App() {
     setSelectedFile(event.target.files?.[0] ?? null);
   };
 
+  const startNewChat = (): void => {
+    if (loading) return;
+
+    const nextSessionId = createSessionId();
+    persistSessionId(nextSessionId);
+
+    setSessionId(nextSessionId);
+    setMessages([]);
+    setInput("");
+  };
+
   return (
     <div className="appShell">
-      <AppHeader />
+      <AppHeader sessionId={sessionId} onNewChat={startNewChat} disabled={loading} />
 
       <main className="appMain">
         <UploadPanel
