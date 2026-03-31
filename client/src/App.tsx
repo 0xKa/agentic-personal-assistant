@@ -1,29 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import ReactMarkdown from "react-markdown";
 import "./App.css";
-
-interface Message {
-  role: "user" | "ai";
-  text: string;
-}
-
-interface ChatResponse {
-  answer?: string;
-  error?: string;
-}
-
-interface IngestResponse {
-  ok?: boolean;
-  error?: string;
-}
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (error instanceof Error && error.message.trim() !== "") {
-    return error.message;
-  }
-  return fallback;
-};
+import { chatWithAssistant, ingestDocument } from "./api/assistantApi";
+import { AppHeader } from "./components/AppHeader";
+import { ChatPanel } from "./components/ChatPanel";
+import { UploadPanel } from "./components/UploadPanel";
+import type { Message } from "./types/chat";
+import { getErrorMessage } from "./utils/errors";
 
 function App() {
   const [input, setInput] = useState<string>("");
@@ -48,23 +31,8 @@ function App() {
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
 
     try {
-      const response = await fetch("http://localhost:3001/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed }),
-      });
-
-      const data: ChatResponse = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.error || "Chat request failed");
-      }
-
-      if (!data.answer || data.answer.trim() === "") {
-        throw new Error("Chat response was empty");
-      }
-
-      setMessages((prev) => [...prev, { role: "ai", text: data.answer as string }]);
+      const answer = await chatWithAssistant(trimmed);
+      setMessages((prev) => [...prev, { role: "ai", text: answer }]);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -82,19 +50,7 @@ function App() {
     setUploadStatus(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-
-      const response = await fetch("http://localhost:3001/api/ingest", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data: IngestResponse = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
-      }
+      await ingestDocument(selectedFile);
 
       setUploadStatus("Uploaded and ingested successfully.");
       setSelectedFile(null);
@@ -118,96 +74,30 @@ function App() {
 
   return (
     <div className="appShell">
-      <header className="appHeader">
-        <div className="appHeaderInner">
-          <div className="appTitle">Agentic Personal Assistant</div>
-          <div className="appSubtitle">Upload PDFs, then chat with your knowledge base.</div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="appMain">
-        <section className="uploadPanel">
-          <div className="uploadRow">
-            <label className="uploadButton" htmlFor="pdf-upload">
-              Choose PDF
-            </label>
-            <input
-              id="pdf-upload"
-              className="uploadInput"
-              type="file"
-              accept="application/pdf,.pdf"
-              onChange={onFileChange}
-            />
-            <button
-              className="primaryButton"
-              onClick={() => {
-                void uploadDocument();
-              }}
-              disabled={!selectedFile || uploading}
-            >
-              {uploading ? "Uploading..." : "Upload"}
-            </button>
-            <div className="uploadMeta">
-              {selectedFile ? selectedFile.name : "No file selected"}
-            </div>
-          </div>
-          {uploadStatus && <div className="uploadStatus">{uploadStatus}</div>}
-        </section>
+        <UploadPanel
+          selectedFile={selectedFile}
+          uploading={uploading}
+          uploadStatus={uploadStatus}
+          onFileChange={onFileChange}
+          onUpload={() => {
+            void uploadDocument();
+          }}
+        />
 
-        <section className="chatPanel">
-          <div className="messages">
-            {messages.length === 0 && (
-              <div className="emptyState">
-                Upload a PDF to ingest it, then ask a question below.
-              </div>
-            )}
-
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={message.role === "user" ? "messageRow isUser" : "messageRow isAi"}
-              >
-                <div className="messageBubble">
-                  {message.role === "ai" ? (
-                    <ReactMarkdown>{message.text}</ReactMarkdown>
-                  ) : (
-                    message.text
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {loading && (
-              <div className="messageRow isAi">
-                <div className="messageBubble isTyping">Thinking...</div>
-              </div>
-            )}
-            <div ref={endOfMessagesRef} />
-          </div>
-
-          <div className="composer">
-            <div className="composerInner">
-              <textarea
-                className="composerInput"
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onKeyDown={onComposerKeyDown}
-                placeholder="Message your assistant..."
-                rows={1}
-              />
-              <button
-                className="sendButton"
-                onClick={() => {
-                  void sendMessage();
-                }}
-                disabled={loading || !input.trim()}
-              >
-                Send
-              </button>
-            </div>
-            <div className="composerHint">Enter to send · Shift+Enter for a new line</div>
-          </div>
-        </section>
+        <ChatPanel
+          messages={messages}
+          loading={loading}
+          input={input}
+          endOfMessagesRef={endOfMessagesRef}
+          onInputChange={setInput}
+          onSend={() => {
+            void sendMessage();
+          }}
+          onComposerKeyDown={onComposerKeyDown}
+        />
       </main>
     </div>
   );
