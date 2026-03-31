@@ -1,5 +1,5 @@
 import { unlink } from "node:fs/promises";
-import { ingestData } from "../ingest.ts";
+import { ingestData } from "../ai/ingest.ts";
 
 export const ingestUploadedFile = async (filePath: string): Promise<void> => {
     try {

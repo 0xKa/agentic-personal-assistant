@@ -1,4 +1,4 @@
-import { runAgent } from "../agent.ts";
+import { runAgent } from "../ai/agent.ts";
 
 interface GetChatAnswerInput {
     message: string;

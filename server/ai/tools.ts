@@ -2,7 +2,7 @@ import { Pinecone as PineconeClient } from "@pinecone-database/pinecone";
 import { PineconeEmbeddings, PineconeStore } from "@langchain/pinecone";
 import { tool } from "langchain";
 import { z } from "zod";
-import { requireEnv } from "./env.ts";
+import { requireEnv } from "../config/env.ts";
 
 let vectorStore: PineconeStore | null = null;
 
