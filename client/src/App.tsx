@@ -1,22 +1,45 @@
 import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
 import ReactMarkdown from "react-markdown";
 import "./App.css";
 
-function App() {
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState(null);
+interface Message {
+  role: "user" | "ai";
+  text: string;
+}
 
-  const endOfMessagesRef = useRef(null);
+interface ChatResponse {
+  answer?: string;
+  error?: string;
+}
+
+interface IngestResponse {
+  ok?: boolean;
+  error?: string;
+}
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error && error.message.trim() !== "") {
+    return error.message;
+  }
+  return fallback;
+};
+
+function App() {
+  const [input, setInput] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  const sendMessage = async () => {
+  const sendMessage = async (): Promise<void> => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
 
@@ -31,21 +54,28 @@ function App() {
         body: JSON.stringify({ message: trimmed }),
       });
 
-      const data = await response.json().catch(() => ({}));
+      const data: ChatResponse = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data?.error || "Chat request failed");
+        throw new Error(data.error || "Chat request failed");
       }
 
-      setMessages((prev) => [...prev, { role: "ai", text: data.answer }]);
-    } catch (err) {
-      setMessages((prev) => [...prev, { role: "ai", text: err?.message ?? "Chat request failed" }]);
+      if (!data.answer || data.answer.trim() === "") {
+        throw new Error("Chat response was empty");
+      }
+
+      setMessages((prev) => [...prev, { role: "ai", text: data.answer as string }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", text: getErrorMessage(error, "Chat request failed") },
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  const uploadDocument = async () => {
+  const uploadDocument = async (): Promise<void> => {
     if (!selectedFile) return;
 
     setUploading(true);
@@ -60,26 +90,30 @@ function App() {
         body: formData,
       });
 
-      const data = await response.json().catch(() => ({}));
+      const data: IngestResponse = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data?.error || "Upload failed");
+        throw new Error(data.error || "Upload failed");
       }
 
       setUploadStatus("Uploaded and ingested successfully.");
       setSelectedFile(null);
-    } catch (err) {
-      setUploadStatus(err?.message ?? "Upload failed");
+    } catch (error) {
+      setUploadStatus(getErrorMessage(error, "Upload failed"));
     } finally {
       setUploading(false);
     }
   };
 
-  const onComposerKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+  const onComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      void sendMessage();
     }
+  };
+
+  const onFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setSelectedFile(event.target.files?.[0] ?? null);
   };
 
   return (
@@ -102,11 +136,13 @@ function App() {
               className="uploadInput"
               type="file"
               accept="application/pdf,.pdf"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              onChange={onFileChange}
             />
             <button
               className="primaryButton"
-              onClick={uploadDocument}
+              onClick={() => {
+                void uploadDocument();
+              }}
               disabled={!selectedFile || uploading}
             >
               {uploading ? "Uploading..." : "Upload"}
@@ -126,17 +162,24 @@ function App() {
               </div>
             )}
 
-            {messages.map((m, i) => (
-              <div key={i} className={m.role === "user" ? "messageRow isUser" : "messageRow isAi"}>
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={message.role === "user" ? "messageRow isUser" : "messageRow isAi"}
+              >
                 <div className="messageBubble">
-                  {m.role === "ai" ? <ReactMarkdown>{m.text}</ReactMarkdown> : m.text}
+                  {message.role === "ai" ? (
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
+                  ) : (
+                    message.text
+                  )}
                 </div>
               </div>
             ))}
 
             {loading && (
               <div className="messageRow isAi">
-                <div className="messageBubble isTyping">Thinking…</div>
+                <div className="messageBubble isTyping">Thinking...</div>
               </div>
             )}
             <div ref={endOfMessagesRef} />
@@ -147,14 +190,16 @@ function App() {
               <textarea
                 className="composerInput"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(event) => setInput(event.target.value)}
                 onKeyDown={onComposerKeyDown}
-                placeholder="Message your assistant…"
+                placeholder="Message your assistant..."
                 rows={1}
               />
               <button
                 className="sendButton"
-                onClick={sendMessage}
+                onClick={() => {
+                  void sendMessage();
+                }}
                 disabled={loading || !input.trim()}
               >
                 Send
